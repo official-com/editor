@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shiva Visions | Premium Video Editor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <script
+    type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #050508;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    * {
+      cursor: none !important;
+    }
+
+    .custom-cursor {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 44px;
+      height: 44px;
+      pointer-events: none;
+      z-index: 999999;
+      transform: translate3d(-100px, -100px, 0);
+      will-change: transform;
+      animation: rainbowHue 4s linear infinite;
+    }
+
+    .custom-cursor svg {
+      width: 100%;
+      height: 100%;
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transform-origin: 4px 4px;
+    }
+
+    .custom-cursor.active svg {
+      transform: scale(0.8) rotate(-15deg);
+    }
+
+    @keyframes rainbowHue {
+      0% {
+        filter: hue-rotate(0deg);
+      }
+
+      100% {
+        filter: hue-rotate(360deg);
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #050508
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #222;
+      border-radius: 3px
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px)
+    }
+
+    /* NAV */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 100;
+      padding: 20px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(12px);
+      background: rgba(5, 5, 8, 0.6);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04)
+    }
+
+    .nav-logo {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.5px
+    }
+
+    .nav-logo span {
+      color: rgba(255, 255, 255, 0.4)
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.5)
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: inherit;
+      transition: color .3s
+    }
+
+    .nav-links a:hover {
+      color: #fff
+    }
+
+    .nav-cta {
+      padding: 8px 24px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      color: #fff;
+      transition: all .3s
+    }
+
+    .nav-cta:hover {
+      background: #fff;
+      color: #000
+    }
+
+    /* HERO */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0
+    }
+
+    .hero-bg img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.35;
+      filter: blur(2px)
+    }
+
+    .hero-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(5, 5, 8, 0.3) 0%, rgba(5, 5, 8, 0.7) 60%, #050508 100%)
+    }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 30% 50%, rgba(59, 130, 246, 0.06), transparent 60%), radial-gradient(ellipse at 70% 30%, rgba(139, 92, 246, 0.05), transparent 50%);
+      z-index: 1
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      gap: 0;
+      padding: 24px 48px 0;
+      flex-wrap: wrap
+    }
+
+    .stat-item {
+      flex: 1;
+      min-width: 140px;
+      padding: 12px 0
+    }
+
+    .stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: rgba(255, 255, 255, 0.35);
+      margin-bottom: 4px
+    }
+
+    .stat-value {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase
+    }
+
+    /* Hero Content */
+    .hero-content {
+      position: relative;
+      z-index: 10;
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      padding: 60px 48px 80px;
+      gap: 40px
+    }
+
+    .hero-left {
+      max-width: 640px
+    }
+
+    .software-icons {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px
+    }
+
+    .sw-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+      letter-spacing: -0.5px
+    }
+
+    .sw-pr {
+      background: linear-gradient(135deg, #00005b, #9999ff);
+      color: #c8b6ff
+    }
+
+    .sw-ae {
+      background: linear-gradient(135deg, #00005b, #9999ff);
+      color: #d4b8ff
+    }
+
+    .sw-dv {
+      background: linear-gradient(135deg, #1a1a2e, #2d3a4a);
+      color: #ff6b4a
+    }
+
+    .hero-tag {
+      font-size: 11px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 12px
+    }
+
+    .hero-title {
+      font-size: clamp(48px, 7vw, 86px);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -2px;
+      margin-bottom: 20px
+    }
+
+    .hero-sub {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.5);
+      line-height: 1.6;
+      max-width: 460px;
+      margin-bottom: 32px;
+      font-weight: 300
+    }
+
+    .hero-cta {
+      display: inline-block;
+      padding: 14px 36px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #b0b0b0, #e0e0e0, #b0b0b0);
+      color: #111;
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      transition: all .4s;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4)
+    }
+
+    .hero-cta:hover {
+      transform: scale(1.04);
+      box-shadow: 0 6px 30px rgba(255, 255, 255, 0.15)
+    }
+
+    /* Hero Right - Hexagonal Photo */
+    .hero-right {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px
+    }
+
+    .hex-frame {
+      position: relative;
+      width: 260px;
+      height: 280px
+    }
+
+    .hex-frame .hex-border {
+      position: absolute;
+      inset: -8px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      background: linear-gradient(135deg, #888, #ccc, #666);
+      z-index: 0
+    }
+
+    .hex-frame .hex-inner {
+      position: absolute;
+      inset: 0;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      overflow: hidden;
+      z-index: 1
+    }
+
+    .hex-frame .hex-inner img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover
+    }
+
+    /* Floating Laptop */
+    .floating-laptop {
+      position: absolute;
+      z-index: 5;
+      top: 25%;
+      left: 28%;
+      width: 280px;
+      transform: rotate(-8deg);
+      animation: floatLaptop 4s ease-in-out infinite
+    }
+
+    .floating-laptop img {
+      width: 100%;
+      filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.6))
+    }
+
+    @keyframes floatLaptop {
+
+      0%,
+      100% {
+        transform: rotate(-8deg) translateY(0)
+      }
+
+      50% {
+        transform: rotate(-8deg) translateY(-15px)
+      }
+    }
+
+    /* 3D Canvas */
+    #three-canvas {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 50%;
+      height: 100%;
+      z-index: 2;
+      pointer-events: none
+    }
+
+    /* SCHEDULE / SERVICES STRIP */
+    .schedule-strip {
+      position: relative;
+      z-index: 10;
+      padding: 32px 48px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(5, 5, 8, 0.9)
+    }
+
+    .schedule-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 20px
+    }
+
+    .schedule-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px
+    }
+
+    .sched-item .sched-time {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px
+    }
+
+    .sched-item .sched-desc {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.45);
+      font-weight: 400
+    }
+
+    /* PORTFOLIO SECTION */
+    .section {
+      padding: 100px 48px
+    }
+
+    .section-head {
+      margin-bottom: 56px
+    }
+
+    .section-head h2 {
+      font-size: clamp(32px, 4vw, 52px);
+      font-weight: 800;
+      letter-spacing: -1.5px
+    }
+
+    .section-head p {
+      color: rgba(255, 255, 255, 0.4);
+      margin-top: 12px;
+      font-size: 16px
+    }
+
+    .port-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 24px
+    }
+
+    .port-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all .5s cubic-bezier(.16, 1, .3, 1);
+      cursor: pointer
+    }
+
+    .port-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5)
+    }
+
+    .port-thumb {
+      position: relative;
+      aspect-ratio: 16/10;
+      overflow: hidden
+    }
+
+    .port-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.7;
+      transition: all .6s
+    }
+
+    .port-card:hover .port-thumb img {
+      opacity: 1;
+      transform: scale(1.05)
+    }
+
+    .port-thumb .port-tag {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      font-size: 11px;
+      font-weight: 500;
+      border: 1px solid rgba(255, 255, 255, 0.1)
+    }
+
+    .port-info {
+      padding: 20px
+    }
+
+    .port-info h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 6px
+    }
+
+    .port-info p {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.4);
+      line-height: 1.5
+    }
+
+    /* SERVICES */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px
+    }
+
+    .srv-card {
+      padding: 36px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      transition: all .4s
+    }
+
+    .srv-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.12);
+      transform: translateY(-4px)
+    }
+
+    .srv-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 20px
+    }
+
+    .srv-card h4 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px
+    }
+
+    .srv-card p {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.4);
+      line-height: 1.6
+    }
+
+    /* STATS */
+    .stats-section {
+      padding: 80px 48px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05)
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 32px;
+      text-align: center
+    }
+
+    .stat-big {
+      font-size: clamp(36px, 5vw, 64px);
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, rgba(255, 255, 255, 0.5));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent
+    }
+
+    .stat-desc {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.35);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-top: 8px
+    }
+
+    /* ABOUT */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr;
+      gap: 60px;
+      align-items: center
+    }
+
+    .about-photo {
+      border-radius: 24px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08)
+    }
+
+    .about-photo img {
+      width: 100%;
+      display: block;
+      opacity: 0.9
+    }
+
+    .about-text h3 {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 16px
+    }
+
+    .about-text p {
+      color: rgba(255, 255, 255, 0.5);
+      line-height: 1.8;
+      font-size: 15px;
+      margin-bottom: 16px
+    }
+
+    /* Glass Container */
+    .glass-container {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 28px;
+      padding: 48px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      transition: border-color 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .glass-container:hover {
+      border-color: rgba(255, 255, 255, 0.14);
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    /* CONTACT */
+    .contact-section {
+      position: relative;
+      overflow: hidden;
+      padding: 120px 48px;
+    }
+
+    .contact-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    .contact-bg img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: blur(10px);
+      opacity: 0.25;
+      transform: scale(1.1);
+      animation: contactBgPan 12s ease-in-out infinite alternate;
+    }
+
+    @keyframes contactBgPan {
+      0% {
+        transform: scale(1.1) translateX(0);
+      }
+
+      100% {
+        transform: scale(1.15) translateX(-3%);
+      }
+    }
+
+    .contact-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, #050508 0%, rgba(5, 5, 8, 0.4) 40%, rgba(5, 5, 8, 0.4) 60%, #050508 100%);
+    }
+
+    .contact-glass {
+      position: relative;
+      z-index: 2;
+      max-width: 680px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 28px;
+      padding: 56px 48px;
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      text-align: center;
+    }
+
+    .contact-wrap {
+      max-width: 640px;
+      margin: 0 auto;
+      text-align: center
+    }
+
+    .contact-wrap h2 {
+      font-size: clamp(32px, 4vw, 52px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 16px
+    }
+
+    .contact-wrap p {
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 16px;
+      margin-bottom: 40px
+    }
+
+    .contact-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 32px
+    }
+
+    .contact-form input,
+    .contact-form textarea {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 16px 20px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border-color .3s
+    }
+
+    .contact-form input:focus,
+    .contact-form textarea:focus {
+      border-color: rgba(59, 130, 246, 0.4)
+    }
+
+    .contact-form textarea {
+      resize: vertical;
+      min-height: 120px
+    }
+
+    .contact-btn {
+      padding: 16px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #fff, #ccc);
+      color: #000;
+      font-weight: 600;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+      transition: all .3s
+    }
+
+    .contact-btn:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15)
+    }
+
+    .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 24px
+    }
+
+    .social-links a {
+      color: rgba(255, 255, 255, 0.4);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      transition: color .3s
+    }
+
+    .social-links a:hover {
+      color: #fff
+    }
+
+    /* FOOTER */
+    .footer {
+      padding: 40px 48px;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.2);
+      font-size: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.04)
+    }
+
+    /* RESPONSIVE */
+    @media(max-width:768px) {
+      .nav {
+        padding: 16px 24px
+      }
+
+      .nav-links {
+        display: none
+      }
+
+      .stats-bar {
+        padding: 20px 24px 0;
+        gap: 0
+      }
+
+      .stat-item {
+        min-width: 50%;
+        padding: 8px 0
+      }
+
+      .hero-content {
+        grid-template-columns: 1fr;
+        padding: 40px 24px 60px;
+        text-align: center
+      }
+
+      .hero-left {
+        max-width: 100%
+      }
+
+      .hero-sub {
+        margin: 0 auto 32px
+      }
+
+      .hero-right {
+        margin-top: 20px
+      }
+
+      .floating-laptop {
+        display: none
+      }
+
+      #three-canvas {
+        width: 100%;
+        opacity: 0.3
+      }
+
+      .schedule-strip {
+        padding: 24px
+      }
+
+      .schedule-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 16px
+      }
+
+      .section {
+        padding: 60px 24px
+      }
+
+      .port-grid {
+        grid-template-columns: 1fr
+      }
+
+      .services-grid {
+        grid-template-columns: 1fr
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr 1fr
+      }
+
+      .about-grid {
+        grid-template-columns: 1fr
+      }
+
+      .stats-bar .stat-item:nth-child(3),
+      .stats-bar .stat-item:nth-child(4) {
+        display: none
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Custom Cursor -->
+  <div id="custom-cursor" class="custom-cursor">
+    <svg width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="cursorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#ff0000" />
+          <stop offset="20%" stop-color="#ffff00" />
+          <stop offset="40%" stop-color="#00ff00" />
+          <stop offset="60%" stop-color="#00ffff" />
+          <stop offset="80%" stop-color="#0000ff" />
+          <stop offset="100%" stop-color="#ff00ff" />
+        </linearGradient>
+        <linearGradient id="cursorInner" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#2a2a2a" />
+          <stop offset="100%" stop-color="#050508" />
+        </linearGradient>
+        <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
+          <feMerge>
+            <feMergeNode in="coloredBlur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <path d="M4 4 L16 38 L22 22 L38 16 Z" fill="url(#cursorInner)" stroke="url(#cursorGrad)" stroke-width="2.5"
+        stroke-linejoin="round" filter="url(#neonGlow)" />
+      <path d="M4 4 L22 22" stroke="url(#cursorGrad)" stroke-width="2" stroke-linecap="round" filter="url(#neonGlow)" />
+    </svg>
+  </div>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-logo">Shiva<span>.visions</span></div>
+    <div class="nav-links">
+      <a href="#work">Work</a>
+      <a href="#services">Services</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <a href="#contact" class="nav-cta">Let's Talk</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="hero-bg"><img src="bg.png" alt=""></div>
+    <div class="hero-overlay"></div>
+    <canvas id="three-canvas"></canvas>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="stat-item reveal">
+        <div class="stat-label">Experience</div>
+        <div class="stat-value">5+ Years</div>
+      </div>
+      <div class="stat-item reveal">
+        <div class="stat-label">Clients</div>
+        <div class="stat-value">100+ Clients</div>
+      </div>
+      <div class="stat-item reveal">
+        <div class="stat-label">Specialty</div>
+        <div class="stat-value">Cinematic Edits</div>
+      </div>
+      <div class="stat-item reveal">
+        <div class="stat-label">Available</div>
+        <div class="stat-value">Worldwide</div>
+      </div>
+    </div>
+
+    <!-- Floating Laptop -->
+    <div class="floating-laptop reveal"><img src="laptop.png" alt="Editing Laptop"></div>
+
+    <!-- Hero Content -->
+    <div class="hero-content">
+      <div class="hero-left">
+        <div class="software-icons reveal">
+          <img src="pr.jpg" width="44" height="44"
+            style="border-radius:10px; background:linear-gradient(135deg, #00005b, #9999ff); padding:4px;" alt="Pr">
+          <img src="af.jpg" width="44" height="44"
+            style="border-radius:10px; background:linear-gradient(135deg, #00005b, #9999ff); padding:4px;" alt="Ae">
+          <img src="dv.png" width="44" height="44"
+            style="border-radius:10px; background:linear-gradient(135deg, #1a1a2e, #2d3a4a); padding:4px;" alt="Dv">
+        </div>
+        <div class="hero-tag reveal">Professional Video Editor</div>
+        <h1 class="hero-title reveal">Shiva.visions</h1>
+        <p class="hero-sub reveal">Crafting premium edits that move people. Professional video editing, motion design,
+          and cinematic storytelling.</p>
+        <a href="#work" class="hero-cta reveal">View My Work</a>
+      </div>
+      <div class="hero-right">
+        <div class="hex-frame reveal">
+          <div class="hex-border"></div>
+          <div class="hex-inner"><img src="shiva.png" alt="Shiva"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Schedule Strip -->
+    <div class="schedule-strip">
+      <div class="schedule-title reveal">Services</div>
+      <div class="schedule-grid">
+        <div class="sched-item reveal">
+          <div class="sched-time">Short-Form</div>
+          <div class="sched-desc">Reels, TikTok & Shorts</div>
+        </div>
+        <div class="sched-item reveal">
+          <div class="sched-time">YouTube</div>
+          <div class="sched-desc">Long-form Storytelling</div>
+        </div>
+        <div class="sched-item reveal">
+          <div class="sched-time">Motion GFX</div>
+          <div class="sched-desc">Titles & Animations</div>
+        </div>
+        <div class="sched-item reveal">
+          <div class="sched-time">Commercial</div>
+          <div class="sched-desc">Brand Films & Ads</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PORTFOLIO -->
+  <section class="section" id="work">
+    <div class="section-head">
+      <h2 class="reveal">Selected Work</h2>
+      <p class="reveal">A curated showcase of cinematic craft and motion design.</p>
+    </div>
+    <div class="port-grid">
+      <div class="port-card reveal">
+        <div class="port-thumb">
+          <img
+            src="https://fiverr-res.cloudinary.com/images/q_auto,f_auto/gigs/149232879/original/ad93dc7ee6e6ef6e9b24c50fae2dbeb600be50e1/do-professional-video-editing-fast-and-high-quality.jpg"
+            alt="">
+          <span class="port-tag">Commercial</span>
+        </div>
+        <div class="port-info">
+          <h3>Neon Nights Campaign</h3>
+          <p>High-energy product launch film with stylized motion graphics and color grading.</p>
+        </div>
+      </div>
+      <div class="port-card reveal">
+        <div class="port-thumb">
+          <img src="Gemini_Generated_Image_465icl465icl465i (1).png" alt="">
+          <span class="port-tag">YouTube</span>
+        </div>
+        <div class="port-info">
+          <h3>Creator Spotlight Series</h3>
+          <p>Retention-optimized storytelling for top-tier YouTube creators.</p>
+        </div>
+      </div>
+      <div class="port-card reveal">
+        <div class="port-thumb">
+          <img src="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=800&q=80" alt="">
+          <span class="port-tag">Brand Film</span>
+        </div>
+        <div class="port-info">
+          <h3>Luxury Automotive</h3>
+          <p>Sleek, rhythmic editing for premium automotive brand campaigns.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="section" id="services" style="background:rgba(255,255,255,0.01)">
+    <div class="section-head">
+      <h2 class="reveal">What I Do</h2>
+      <p class="reveal">Elevating visual stories with precision and creative vision.</p>
+    </div>
+    <div class="services-grid">
+      <div class="srv-card reveal">
+        <div class="srv-icon">
+          <img src="https://static.vecteezy.com/system/resources/thumbnails/023/608/676/small/movie-film-frame-png.png"
+            alt="Short-Form Edits" style="width: 72px; height: 72px; object-fit: contain;">
+        </div>
+        <h4>Short-Form Edits</h4>
+        <p>High-impact vertical content designed for maximum retention on TikTok, Reels, and Shorts.</p>
+      </div>
+      <div class="srv-card reveal">
+        <div class="srv-icon">
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Youtube_shorts_icon.svg/250px-Youtube_shorts_icon.svg.png"
+            alt="YouTube Editing" style="width: 60px; height: 60px; object-fit: contain;">
+        </div>
+        <h4>YouTube Editing</h4>
+        <p>Engaging long-form edits with dynamic pacing, sound design, and narrative flow.</p>
+      </div>
+      <div class="srv-card reveal">
+        <div class="srv-icon">
+          <img
+            src="https://static.vecteezy.com/system/resources/thumbnails/073/495/223/small/after-effects-logo-glossy-circle-icon-with-transparent-background-free-png.png"
+            alt="Motion Graphics" style="width: 60px; height: 60px; object-fit: contain;">
+        </div>
+        <h4>Motion Graphics</h4>
+        <p>Custom titles, lower thirds, transitions, and animated visual elements.</p>
+      </div>
+      <div class="srv-card reveal">
+        <div class="srv-icon">
+          <img src="https://png.pngtree.com/element_pic/16/11/18/4f829e85866bd52d062ca58b4e1ecef5.png"
+            alt="Commercial Edits" style="width: 62px; height: 62px; object-fit: contain;">
+        </div>
+        <h4>Commercial Edits</h4>
+        <p>Cinematic color grading, premium cuts, and visual storytelling for brands.</p>
+      </div>
+      <div class="srv-card reveal">
+        <div class="srv-icon">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/4/4d/DaVinci_Resolve_Studio.png"
+            alt="Brand Storytelling" style="width: 62px; height: 62px; object-fit: contain;">
+        </div>
+        <h4>Brand Storytelling</h4>
+        <p>Narrative-driven content that communicates brand identity and connects with audiences.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats-section">
+    <div class="stats-grid">
+      <div class="reveal">
+        <div class="stat-big counter" data-target="100">0</div>
+        <div class="stat-desc">Happy Clients</div>
+      </div>
+      <div class="reveal">
+        <div class="stat-big counter" data-target="5">0</div>
+        <div class="stat-desc">Years Experience</div>
+      </div>
+      <div class="reveal">
+        <div class="stat-big counter" data-target="300">0</div>
+        <div class="stat-desc">Projects Done</div>
+      </div>
+      <div class="reveal">
+        <div class="stat-big counter" data-target="50">0</div>
+        <div class="stat-desc">Brands Served</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <section class="section" id="about">
+    <div class="glass-container">
+      <div class="about-grid">
+        <div class="about-photo reveal"><img src="shiva.png" alt="Shiva"></div>
+        <div class="about-text">
+          <h3 class="reveal">About Shiva</h3>
+          <p class="reveal">A professional video editor and creative designer trusted by 100+ clients worldwide. Shiva
+            specializes in cinematic storytelling, premium motion design, and refined visual craft that elevates brands
+            and creators.</p>
+          <p class="reveal">With 5+ years of experience across YouTube editing, commercial production, and short-form
+            content, Shiva brings a meticulous eye for detail and a deep understanding of visual rhythm to every
+            project.
+          </p>
+          <p class="reveal">Tools of the trade: Adobe Premiere Pro, After Effects, DaVinci Resolve, and the relentless
+            pursuit of creative excellence.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="contact-section" id="contact">
+    <div class="contact-bg"><img src="bg.png" alt=""></div>
+    <div class="contact-glass">
+      <div class="contact-wrap">
+        <h2 class="reveal">Let's Create Together</h2>
+        <p class="reveal">Available for select projects and collaborations. Let's craft your next masterpiece.</p>
+        <form class="contact-form reveal" onsubmit="event.preventDefault()">
+          <input type="text" placeholder="Your Name">
+          <input type="email" placeholder="Your Email">
+          <textarea placeholder="Tell me about your project..."></textarea>
+          <button type="submit" class="contact-btn">Send Message</button>
+        </form>
+        <div class="social-links reveal">
+          <a href="#">Instagram</a>
+          <a href="#">Email</a>
+          <a href="#">WhatsApp</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">© 2026 Shiva Visions. All rights reserved.</footer>
+
+  <script type="module">
+    import * as THREE from 'three';
+
+    // GSAP
+    gsap.registerPlugin(ScrollTrigger);
+    document.querySelectorAll('.reveal').forEach(el => {
+      gsap.to(el, { scrollTrigger: { trigger: el, start: 'top 88%' }, y: 0, opacity: 1, duration: 1, ease: 'power3.out' });
+    });
+
+    // Counters
+    document.querySelectorAll('.counter').forEach(c => {
+      let t = parseInt(c.dataset.target);
+      gsap.to(c, { scrollTrigger: { trigger: c, start: 'top 80%' }, innerHTML: t, duration: 2, snap: { innerHTML: 1 }, ease: 'power2.out' });
+    });
+
+    // THREE.JS - Floating particles + subtle lighting
+    const canvas = document.getElementById('three-canvas');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
+    camera.position.z = 8;
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // Lights
+    scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+    const pl1 = new THREE.PointLight(0x3b82f6, 40, 20); pl1.position.set(-3, 3, 5); scene.add(pl1);
+    const pl2 = new THREE.PointLight(0x8b5cf6, 25, 20); pl2.position.set(3, -2, 4); scene.add(pl2);
+
+    // Particles
+    const pCount = 120; const pGeo = new THREE.BufferGeometry();
+    const pPos = new Float32Array(pCount * 3);
+    for (let i = 0; i < pCount * 3; i++)pPos[i] = (Math.random() - 0.5) * 16;
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+    const pMat = new THREE.PointsMaterial({ size: 0.04, color: 0x6366f1, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending });
+    const particles = new THREE.Points(pGeo, pMat); scene.add(particles);
+
+    // Geometric accents
+    const gMat = new THREE.MeshPhysicalMaterial({ color: 0x111118, metalness: 0.9, roughness: 0.15, clearcoat: 1, transparent: true, opacity: 0.4 });
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(2, 0.06, 16, 80), gMat);
+    ring.position.set(1, 0, 0); scene.add(ring);
+    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(1.4, 0.04, 16, 60), gMat);
+    ring2.position.set(-1, 1, 1); ring2.rotation.x = 1; scene.add(ring2);
+
+    let mx = 0, my = 0;
+    document.addEventListener('mousemove', e => { mx = (e.clientX / window.innerWidth - 0.5) * 2; my = (e.clientY / window.innerHeight - 0.5) * 2; });
+
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      const t = clock.getElapsedTime();
+      particles.rotation.y = t * 0.03;
+      particles.rotation.x = t * 0.01;
+      ring.rotation.z = t * 0.15; ring.rotation.x = t * 0.08;
+      ring2.rotation.z = -t * 0.12; ring2.rotation.y = t * 0.1;
+      camera.position.x += (mx * 0.5 - camera.position.x) * 0.02;
+      camera.position.y += (-my * 0.3 - camera.position.y) * 0.02;
+      camera.lookAt(0, 0, 0);
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+      camera.aspect = canvas.clientWidth / canvas.clientHeight;
+      camera.updateProjectionMatrix();
+    });
+
+    // Smooth scroll for nav links
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+
+    // Custom Cursor Logic
+    const cCursor = document.getElementById('custom-cursor');
+    document.addEventListener('mousemove', e => {
+      cCursor.style.transform = `translate3d(${e.clientX - 4}px, ${e.clientY - 4}px, 0)`;
+
+      const hoverable = e.target.closest('a, button, input, textarea, .port-card, .srv-card, .nav-logo');
+      if (hoverable) {
+        cCursor.classList.add('active');
+      } else {
+        cCursor.classList.remove('active');
+      }
+    });
+  </script>
+</body>
+
+</html>
