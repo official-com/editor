@@ -1,1256 +1,765 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shiva Visions | Premium Video Editor</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-    rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-  <script
-    type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      background: #050508;
-      color: #fff;
-      font-family: 'Inter', sans-serif;
-      overflow-x: hidden;
-    }
-
-    * {
-      cursor: none !important;
-    }
-
-    .custom-cursor {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 24px;
-      height: 24px;
-      pointer-events: none;
-      z-index: 999999;
-      transform: translate3d(-100px, -100px, 0);
-      will-change: transform;
-      animation: rainbowHue 4s linear infinite;
-    }
-
-    .custom-cursor svg {
-      width: 100%;
-      height: 100%;
-      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      transform-origin: 4px 4px;
-    }
-
-    .custom-cursor.active svg {
-      transform: scale(0.8) rotate(-15deg);
-    }
-
-    @keyframes rainbowHue {
-      0% {
-        filter: hue-rotate(0deg);
-      }
-
-      100% {
-        filter: hue-rotate(360deg);
-      }
-    }
-
-    ::-webkit-scrollbar {
-      width: 6px
-    }
-
-    ::-webkit-scrollbar-track {
-      background: #050508
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: #222;
-      border-radius: 3px
-    }
-
-    .reveal {
-      opacity: 0;
-      transform: translateY(30px)
-    }
-
-    /* NAV */
-    .nav {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      z-index: 100;
-      padding: 20px 48px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      backdrop-filter: blur(12px);
-      background: rgba(5, 5, 8, 0.6);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04)
-    }
-
-    .nav-logo {
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: -0.5px
-    }
-
-    .nav-logo span {
-      color: rgba(255, 255, 255, 0.4)
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 32px;
-      font-size: 13px;
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.5)
-    }
-
-    .nav-links a {
-      text-decoration: none;
-      color: inherit;
-      transition: color .3s
-    }
-
-    .nav-links a:hover {
-      color: #fff
-    }
-
-    .nav-cta {
-      padding: 8px 24px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      font-size: 13px;
-      font-weight: 500;
-      text-decoration: none;
-      color: #fff;
-      transition: all .3s
-    }
-
-    .nav-cta:hover {
-      background: #fff;
-      color: #000
-    }
-
-    /* HERO */
-    .hero {
-      position: relative;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden
-    }
-
-    .hero-bg {
-      position: absolute;
-      inset: 0;
-      z-index: 0
-    }
-
-    .hero-bg img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      opacity: 0.35;
-      filter: blur(2px)
-    }
-
-    .hero-bg::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, rgba(5, 5, 8, 0.3) 0%, rgba(5, 5, 8, 0.7) 60%, #050508 100%)
-    }
-
-    .hero-overlay {
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(ellipse at 30% 50%, rgba(59, 130, 246, 0.06), transparent 60%), radial-gradient(ellipse at 70% 30%, rgba(139, 92, 246, 0.05), transparent 50%);
-      z-index: 1
-    }
-
-    /* Stats Bar */
-    .stats-bar {
-      position: relative;
-      z-index: 10;
-      display: flex;
-      gap: 0;
-      padding: 24px 48px 0;
-      flex-wrap: wrap
-    }
-
-    .stat-item {
-      flex: 1;
-      min-width: 140px;
-      padding: 12px 0
-    }
-
-    .stat-label {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      color: rgba(255, 255, 255, 0.35);
-      margin-bottom: 4px
-    }
-
-    .stat-value {
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase
-    }
-
-    /* Hero Content */
-    .hero-content {
-      position: relative;
-      z-index: 10;
-      flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      align-items: center;
-      padding: 60px 48px 80px;
-      gap: 40px
-    }
-
-    .hero-left {
-      max-width: 640px
-    }
-
-    .software-icons {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 16px
-    }
-
-    .sw-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      font-size: 14px;
-      letter-spacing: -0.5px
-    }
-
-    .sw-pr {
-      background: linear-gradient(135deg, #00005b, #9999ff);
-      color: #c8b6ff
-    }
-
-    .sw-ae {
-      background: linear-gradient(135deg, #00005b, #9999ff);
-      color: #d4b8ff
-    }
-
-    .sw-dv {
-      background: linear-gradient(135deg, #1a1a2e, #2d3a4a);
-      color: #ff6b4a
-    }
-
-    .hero-tag {
-      font-size: 11px;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      font-weight: 600;
-      color: rgba(255, 255, 255, 0.5);
-      margin-bottom: 12px
-    }
-
-    .hero-title {
-      font-size: clamp(48px, 7vw, 86px);
-      font-weight: 800;
-      line-height: 1;
-      letter-spacing: -2px;
-      margin-bottom: 20px
-    }
-
-    .hero-sub {
-      font-size: 16px;
-      color: rgba(255, 255, 255, 0.5);
-      line-height: 1.6;
-      max-width: 460px;
-      margin-bottom: 32px;
-      font-weight: 300
-    }
-
-    .hero-cta {
-      display: inline-block;
-      padding: 14px 36px;
-      border-radius: 999px;
-      background: linear-gradient(135deg, #b0b0b0, #e0e0e0, #b0b0b0);
-      color: #111;
-      font-weight: 600;
-      font-size: 13px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      text-decoration: none;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      transition: all .4s;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4)
-    }
-
-    .hero-cta:hover {
-      transform: scale(1.04);
-      box-shadow: 0 6px 30px rgba(255, 255, 255, 0.15)
-    }
-
-    /* Hero Right - Avatar Image */
-    .hero-right {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 24px
-    }
-
-    .hero-avatar {
-      position: relative;
-      width: 320px;
-      height: 320px;
-      animation: heroFloat 4s ease-in-out infinite;
-    }
-
-    .hero-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      filter: drop-shadow(0 8px 32px rgba(99, 102, 241, 0.25)) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4));
-      transition: transform 0.4s cubic-bezier(.16, 1, .3, 1), filter 0.4s ease;
-    }
-
-    .hero-avatar:hover img {
-      transform: scale(1.06) rotate(2deg);
-      filter: drop-shadow(0 12px 40px rgba(99, 102, 241, 0.4)) drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
-    }
-
-    @keyframes heroFloat {
-
-      0%,
-      100% {
-        transform: translateY(0);
-      }
-
-      50% {
-        transform: translateY(-14px);
-      }
-    }
-
-    /* Floating Laptop - HIDDEN */
-    .floating-laptop {
-      display: none !important;
-    }
-
-    /* 3D Canvas */
-    #three-canvas {
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 50%;
-      height: 100%;
-      z-index: 2;
-      pointer-events: none
-    }
-
-    /* SCHEDULE / SERVICES STRIP */
-    .schedule-strip {
-      position: relative;
-      z-index: 10;
-      padding: 32px 48px;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(5, 5, 8, 0.9)
-    }
-
-    .schedule-title {
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-bottom: 20px
-    }
-
-    .schedule-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 24px
-    }
-
-    .sched-item .sched-time {
-      font-size: 14px;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 4px
-    }
-
-    .sched-item .sched-desc {
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.45);
-      font-weight: 400
-    }
-
-    /* PORTFOLIO SECTION */
-    .section {
-      padding: 100px 48px
-    }
-
-    .section-head {
-      margin-bottom: 56px
-    }
-
-    .section-head h2 {
-      font-size: clamp(32px, 4vw, 52px);
-      font-weight: 800;
-      letter-spacing: -1.5px
-    }
-
-    .section-head p {
-      color: rgba(255, 255, 255, 0.4);
-      margin-top: 12px;
-      font-size: 16px
-    }
-
-    .port-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 24px
-    }
-
-    .port-card {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 20px;
-      overflow: hidden;
-      transition: all .5s cubic-bezier(.16, 1, .3, 1);
-      cursor: pointer
-    }
-
-    .port-card:hover {
-      transform: translateY(-8px);
-      border-color: rgba(255, 255, 255, 0.15);
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5)
-    }
-
-    .port-thumb {
-      position: relative;
-      aspect-ratio: 16/10;
-      overflow: hidden
-    }
-
-    .port-thumb img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      opacity: 0.7;
-      transition: all .6s
-    }
-
-    .port-card:hover .port-thumb img {
-      opacity: 1;
-      transform: scale(1.05)
-    }
-
-    .port-thumb .port-tag {
-      position: absolute;
-      bottom: 12px;
-      left: 12px;
-      padding: 6px 14px;
-      border-radius: 999px;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(10px);
-      font-size: 11px;
-      font-weight: 500;
-      border: 1px solid rgba(255, 255, 255, 0.1)
-    }
-
-    .port-info {
-      padding: 20px
-    }
-
-    .port-info h3 {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 6px
-    }
-
-    .port-info p {
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.4);
-      line-height: 1.5
-    }
-
-    /* SERVICES */
-    .services-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 20px
-    }
-
-    .srv-card {
-      padding: 36px;
-      border-radius: 20px;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      transition: all .4s
-    }
-
-    .srv-card:hover {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: rgba(255, 255, 255, 0.12);
-      transform: translateY(-4px)
-    }
-
-    .srv-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-      margin-bottom: 20px
-    }
-
-    .srv-card h4 {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 8px
-    }
-
-    .srv-card p {
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.4);
-      line-height: 1.6
-    }
-
-    /* STATS */
-    .stats-section {
-      padding: 80px 48px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05)
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 32px;
-      text-align: center
-    }
-
-    .stat-big {
-      font-size: clamp(36px, 5vw, 64px);
-      font-weight: 800;
-      background: linear-gradient(135deg, #fff, rgba(255, 255, 255, 0.5));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent
-    }
-
-    .stat-desc {
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.35);
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      margin-top: 8px
-    }
-
-    /* ABOUT */
-    .about-grid {
-      display: grid;
-      grid-template-columns: 1fr 1.5fr;
-      gap: 60px;
-      align-items: center
-    }
-
-    .about-photo {
-      border-radius: 24px;
-      overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.08)
-    }
-
-    .about-photo img {
-      width: 100%;
-      display: block;
-      opacity: 0.9
-    }
-
-    .about-text h3 {
-      font-size: 28px;
-      font-weight: 700;
-      margin-bottom: 16px
-    }
-
-    .about-text p {
-      color: rgba(255, 255, 255, 0.5);
-      line-height: 1.8;
-      font-size: 15px;
-      margin-bottom: 16px
-    }
-
-    /* Glass Container */
-    .glass-container {
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 28px;
-      padding: 48px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-      transition: border-color 0.4s ease, box-shadow 0.4s ease;
-    }
-
-    .glass-container:hover {
-      border-color: rgba(255, 255, 255, 0.14);
-      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    }
-
-    /* CONTACT */
-    .contact-section {
-      position: relative;
-      overflow: hidden;
-      padding: 120px 48px;
-    }
-
-    .contact-bg {
-      position: absolute;
-      inset: 0;
-      z-index: 0;
-    }
-
-    .contact-bg img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      filter: blur(10px);
-      opacity: 0.25;
-      transform: scale(1.1);
-      animation: contactBgPan 12s ease-in-out infinite alternate;
-    }
-
-    @keyframes contactBgPan {
-      0% {
-        transform: scale(1.1) translateX(0);
-      }
-
-      100% {
-        transform: scale(1.15) translateX(-3%);
-      }
-    }
-
-    .contact-bg::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(180deg, #050508 0%, rgba(5, 5, 8, 0.4) 40%, rgba(5, 5, 8, 0.4) 60%, #050508 100%);
-    }
-
-    .contact-glass {
-      position: relative;
-      z-index: 2;
-      max-width: 680px;
-      margin: 0 auto;
-      background: rgba(255, 255, 255, 0.04);
-      backdrop-filter: blur(28px);
-      -webkit-backdrop-filter: blur(28px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 28px;
-      padding: 56px 48px;
-      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-      text-align: center;
-    }
-
-    .contact-wrap {
-      max-width: 640px;
-      margin: 0 auto;
-      text-align: center
-    }
-
-    .contact-wrap h2 {
-      font-size: clamp(32px, 4vw, 52px);
-      font-weight: 800;
-      letter-spacing: -1px;
-      margin-bottom: 16px
-    }
-
-    .contact-wrap p {
-      color: rgba(255, 255, 255, 0.4);
-      font-size: 16px;
-      margin-bottom: 40px
-    }
-
-    .contact-form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      margin-bottom: 32px
-    }
-
-    .contact-form input,
-    .contact-form textarea {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 14px;
-      padding: 16px 20px;
-      color: #fff;
-      font-family: inherit;
-      font-size: 14px;
-      outline: none;
-      transition: border-color .3s
-    }
-
-    .contact-form input:focus,
-    .contact-form textarea:focus {
-      border-color: rgba(59, 130, 246, 0.4)
-    }
-
-    .contact-form textarea {
-      resize: vertical;
-      min-height: 120px
-    }
-
-    .contact-btn {
-      padding: 16px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #fff, #ccc);
-      color: #000;
-      font-weight: 600;
-      font-size: 14px;
-      border: none;
-      cursor: pointer;
-      transition: all .3s
-    }
-
-    .contact-btn:hover {
-      transform: scale(1.02);
-      box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15)
-    }
-
-    .social-links {
-      display: flex;
-      justify-content: center;
-      gap: 24px
-    }
-
-    .social-links a {
-      color: rgba(255, 255, 255, 0.4);
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 500;
-      transition: color .3s
-    }
-
-    .social-links a:hover {
-      color: #fff
-    }
-
-    /* FOOTER */
-    .footer {
-      padding: 40px 48px;
-      text-align: center;
-      color: rgba(255, 255, 255, 0.2);
-      font-size: 12px;
-      border-top: 1px solid rgba(255, 255, 255, 0.04)
-    }
-
-    /* RESPONSIVE */
-    @media(max-width:768px) {
-      .nav {
-        padding: 16px 24px
-      }
-
-      .nav-links {
-        display: none
-      }
-
-      .stats-bar {
-        padding: 20px 24px 0;
-        gap: 0
-      }
-
-      .stat-item {
-        min-width: 50%;
-        padding: 8px 0
-      }
-
-      .hero-content {
-        grid-template-columns: 1fr;
-        padding: 40px 24px 60px;
-        text-align: center
-      }
-
-      .hero-left {
-        max-width: 100%
-      }
-
-      .hero-sub {
-        margin: 0 auto 32px
-      }
-
-      .hero-right {
-        margin-top: 20px
-      }
-
-      .floating-laptop {
-        display: none
-      }
-
-      #three-canvas {
-        width: 100%;
-        opacity: 0.3
-      }
-
-      .schedule-strip {
-        padding: 24px
-      }
-
-      .schedule-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 16px
-      }
-
-      .section {
-        padding: 60px 24px
-      }
-
-      .port-grid {
-        grid-template-columns: 1fr
-      }
-
-      .services-grid {
-        grid-template-columns: 1fr
-      }
-
-      .stats-grid {
-        grid-template-columns: 1fr 1fr
-      }
-
-      .about-grid {
-        grid-template-columns: 1fr
-      }
-
-      .stats-bar .stat-item:nth-child(3),
-      .stats-bar .stat-item:nth-child(4) {
-        display: none
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReGadget â€” Premium Second-Hand Tech Gadgets</title>
+<meta name="description" content="Buy verified, pre-owned tech gadgets at unbeatable prices. Smartphones, laptops, gaming gear & more with warranty.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>ðŸ”„</text></svg>">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a0f;--bg2:#111118;--bg3:#1a1a24;--card:#14141e;
+  --text:#f0f0f5;--text2:#9a9ab0;--accent:#00d4ff;--accent2:#7c3aed;
+  --gradient:linear-gradient(135deg,#00d4ff,#7c3aed);
+  --glow:0 0 30px rgba(0,212,255,.3);--radius:16px;
+}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+h1,h2,h3,h4{font-family:'Outfit',sans-serif}
+a{text-decoration:none;color:inherit}
+img{max-width:100%;display:block}
+button{cursor:pointer;border:none;font-family:'Inter',sans-serif}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:4px}
+
+/* LOADER */
+.loader{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .6s,visibility .6s}
+.loader.hidden{opacity:0;visibility:hidden}
+.loader-ring{width:60px;height:60px;border:3px solid var(--bg3);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* NAV */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 40px;display:flex;align-items:center;justify-content:space-between;transition:all .4s;backdrop-filter:blur(0px)}
+.nav.scrolled{background:rgba(10,10,15,.9);backdrop-filter:blur(20px);box-shadow:0 2px 30px rgba(0,0,0,.5);padding:12px 40px}
+.nav-logo{font-family:'Outfit';font-size:1.6rem;font-weight:800;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-logo span{font-weight:400;font-size:.9rem;-webkit-text-fill-color:var(--text2);margin-left:4px}
+.nav-links{display:flex;gap:28px;align-items:center}
+.nav-links a{font-size:.9rem;font-weight:500;color:var(--text2);transition:color .3s;position:relative}
+.nav-links a:hover{color:var(--text)}
+.nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:2px;background:var(--gradient);transition:width .3s}
+.nav-links a:hover::after{width:100%}
+.nav-right{display:flex;align-items:center;gap:16px}
+.nav-search{display:flex;align-items:center;background:var(--bg3);border-radius:50px;padding:8px 16px;gap:8px;border:1px solid transparent;transition:border .3s,width .3s;width:240px}
+.nav-search:focus-within{border-color:var(--accent);box-shadow:var(--glow)}
+.nav-search input{background:none;border:none;outline:none;color:var(--text);font-size:.85rem;width:100%}
+.nav-search input::placeholder{color:var(--text2)}
+.nav-search svg{width:18px;height:18px;color:var(--text2);flex-shrink:0}
+.nav-icon{width:40px;height:40px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;transition:all .3s;position:relative}
+.nav-icon:hover{background:var(--accent);transform:scale(1.1)}
+.nav-icon svg{width:18px;height:18px}
+.cart-count{position:absolute;top:-4px;right:-4px;background:var(--accent2);color:#fff;font-size:.65rem;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;align-items:center;padding:120px 60px 60px;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 70% 50%,rgba(124,58,237,.15),transparent 70%),radial-gradient(ellipse at 30% 80%,rgba(0,212,255,.1),transparent 50%)}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:60px 60px;animation:gridMove 20s linear infinite}
+@keyframes gridMove{to{background-position:60px 60px}}
+.hero-content{position:relative;z-index:2;max-width:580px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);padding:6px 16px;border-radius:50px;font-size:.8rem;color:var(--accent);margin-bottom:24px;animation:fadeUp .8s ease}
+.hero-badge .dot{width:8px;height:8px;background:var(--accent);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.hero h1{font-size:3.8rem;font-weight:800;line-height:1.1;margin-bottom:20px;animation:fadeUp .8s ease .1s both}
+.hero h1 .gradient{background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:1.05rem;color:var(--text2);line-height:1.7;margin-bottom:32px;animation:fadeUp .8s ease .2s both}
+.hero-btns{display:flex;gap:16px;animation:fadeUp .8s ease .3s both}
+.btn-primary{padding:14px 32px;background:var(--gradient);border-radius:50px;font-weight:600;font-size:.95rem;color:#fff;transition:all .3s;position:relative;overflow:hidden}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,212,255,.4)}
+.btn-primary::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent,rgba(255,255,255,.2),transparent);transform:translateX(-100%);transition:transform .5s}
+.btn-primary:hover::after{transform:translateX(100%)}
+.btn-outline{padding:14px 32px;background:transparent;border:2px solid var(--bg3);border-radius:50px;font-weight:600;font-size:.95rem;color:var(--text);transition:all .3s}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-2px)}
+.hero-image{position:absolute;right:40px;top:50%;transform:translateY(-50%);width:45%;max-width:600px;z-index:2;animation:float 6s ease-in-out infinite}
+.hero-image img{width:100%;border-radius:20px;filter:drop-shadow(0 20px 60px rgba(0,212,255,.2))}
+@keyframes float{0%,100%{transform:translateY(-50%)}50%{transform:translateY(calc(-50% - 20px))}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+
+/* FEATURES BAR */
+.features{padding:40px 60px;display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.feature-card{background:var(--card);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);padding:28px;display:flex;align-items:center;gap:16px;transition:all .4s;opacity:0;transform:translateY(20px)}
+.feature-card.visible{opacity:1;transform:translateY(0)}
+.feature-card:hover{border-color:var(--accent);transform:translateY(-4px);box-shadow:var(--glow)}
+.feature-icon{width:48px;height:48px;border-radius:12px;background:rgba(0,212,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.feature-icon svg{width:24px;height:24px;color:var(--accent)}
+.feature-card h4{font-size:.95rem;margin-bottom:4px}
+.feature-card p{font-size:.8rem;color:var(--text2)}
+
+/* SECTION COMMON */
+section{padding:80px 60px}
+.section-head{text-align:center;margin-bottom:50px}
+.section-head .tag{display:inline-block;background:rgba(124,58,237,.15);color:var(--accent2);padding:6px 16px;border-radius:50px;font-size:.8rem;font-weight:600;margin-bottom:12px}
+.section-head h2{font-size:2.4rem;font-weight:700;margin-bottom:12px}
+.section-head p{color:var(--text2);max-width:500px;margin:0 auto;font-size:.95rem}
+
+/* CATEGORIES */
+.categories-grid{display:flex;justify-content:center;flex-wrap:wrap;gap:32px}
+.cat-item{text-align:center;cursor:pointer;transition:all .4s;opacity:0;transform:translateY(20px)}
+.cat-item.visible{opacity:1;transform:translateY(0)}
+.cat-item:hover{transform:translateY(-8px)}
+.cat-icon{width:90px;height:90px;border-radius:50%;background:var(--bg3);border:2px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;transition:all .4s;overflow:hidden}
+.cat-icon img{width:50px;height:50px;object-fit:contain}
+.cat-item:hover .cat-icon{border-color:var(--accent);box-shadow:var(--glow);background:rgba(0,212,255,.1)}
+.cat-item span{font-size:.85rem;font-weight:500;color:var(--text2);transition:color .3s}
+.cat-item:hover span{color:var(--text)}
+
+/* PRODUCTS GRID */
+.products-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.product-card{background:var(--card);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);overflow:hidden;transition:all .4s;opacity:0;transform:translateY(30px);position:relative}
+.product-card.visible{opacity:1;transform:translateY(0)}
+.product-card:hover{transform:translateY(-8px);border-color:rgba(0,212,255,.3);box-shadow:0 20px 40px rgba(0,0,0,.4)}
+.product-badge{position:absolute;top:12px;left:12px;padding:4px 12px;border-radius:50px;font-size:.7rem;font-weight:600;z-index:3}
+.badge-used{background:rgba(0,212,255,.2);color:var(--accent)}
+.badge-deal{background:rgba(255,107,53,.2);color:#ff6b35}
+.badge-verified{background:rgba(16,185,129,.2);color:#10b981}
+.product-img{height:220px;background:var(--bg3);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.product-img img{width:100%;height:100%;object-fit:cover;transition:transform .6s}
+.product-card:hover .product-img img{transform:scale(1.08)}
+.product-actions{position:absolute;bottom:-50px;left:0;right:0;display:flex;justify-content:center;gap:8px;padding:12px;transition:bottom .4s;z-index:3}
+.product-card:hover .product-actions{bottom:0}
+.product-actions button{width:38px;height:38px;border-radius:50%;background:rgba(10,10,15,.8);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.1);color:#fff;display:flex;align-items:center;justify-content:center;transition:all .3s}
+.product-actions button:hover{background:var(--accent);border-color:var(--accent)}
+.product-info{padding:20px}
+.product-condition{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.condition-dot{width:6px;height:6px;border-radius:50%}
+.condition-dot.excellent{background:#10b981}
+.condition-dot.good{background:#f59e0b}
+.condition-dot.fair{background:#ef4444}
+.product-condition span{font-size:.75rem;color:var(--text2)}
+.product-info h3{font-size:1rem;font-weight:600;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.product-price{display:flex;align-items:center;gap:10px}
+.price-now{font-size:1.2rem;font-weight:700;color:var(--accent)}
+.price-original{font-size:.85rem;color:var(--text2);text-decoration:line-through}
+.price-save{font-size:.75rem;background:rgba(16,185,129,.15);color:#10b981;padding:2px 8px;border-radius:50px;font-weight:600}
+.product-meta{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.05)}
+.product-meta span{font-size:.75rem;color:var(--text2)}
+.product-rating{display:flex;align-items:center;gap:4px;color:#f59e0b;font-size:.8rem}
+
+/* MARQUEE */
+.marquee-section{padding:30px 0;overflow:hidden;border-top:1px solid rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.05);background:var(--bg2)}
+.marquee-track{display:flex;animation:marquee 25s linear infinite;width:max-content}
+.marquee-item{display:flex;align-items:center;gap:12px;padding:0 40px;white-space:nowrap;font-size:1.1rem;font-weight:600;color:var(--text2)}
+.marquee-item .sep{color:var(--accent);font-size:1.5rem}
+
+/* DEALS BANNER */
+.deals-banner{margin:0 60px;border-radius:24px;background:linear-gradient(135deg,#1a0533,#0d1b3e,#0a2a2a);padding:60px;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden;border:1px solid rgba(124,58,237,.2)}
+.deals-banner::before{content:'';position:absolute;top:-50%;right:-20%;width:500px;height:500px;background:radial-gradient(circle,rgba(0,212,255,.1),transparent 70%);animation:float 8s ease-in-out infinite}
+.deals-content{max-width:480px;position:relative;z-index:2}
+.deals-content h2{font-size:2.2rem;font-weight:800;margin-bottom:12px}
+.deals-content p{color:var(--text2);margin-bottom:24px}
+.deals-timer{display:flex;gap:12px;margin-bottom:28px}
+.timer-box{background:rgba(255,255,255,.08);backdrop-filter:blur(10px);border-radius:12px;padding:14px 18px;text-align:center;min-width:70px;border:1px solid rgba(255,255,255,.1)}
+.timer-box .num{font-size:1.8rem;font-weight:800;font-family:'Outfit';background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.timer-box .label{font-size:.7rem;color:var(--text2);margin-top:2px}
+.deals-image{width:350px;position:relative;z-index:2}
+.deals-image img{width:100%;border-radius:16px;animation:float 5s ease-in-out infinite}
+
+/* TESTIMONIALS */
+.testimonials-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.test-card{background:var(--card);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);padding:28px;transition:all .4s;opacity:0;transform:translateY(20px)}
+.test-card.visible{opacity:1;transform:translateY(0)}
+.test-card:hover{border-color:var(--accent2);transform:translateY(-4px)}
+.test-stars{color:#f59e0b;margin-bottom:12px;font-size:.9rem}
+.test-card p{color:var(--text2);font-size:.9rem;line-height:1.7;margin-bottom:16px;font-style:italic}
+.test-author{display:flex;align-items:center;gap:12px}
+.test-avatar{width:40px;height:40px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem}
+.test-author h4{font-size:.9rem}
+.test-author span{font-size:.75rem;color:var(--text2)}
+
+/* NEWSLETTER */
+.newsletter{margin:0 60px;border-radius:24px;background:var(--gradient);padding:60px;text-align:center;position:relative;overflow:hidden}
+.newsletter::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+.newsletter h2{font-size:2.2rem;font-weight:800;margin-bottom:12px;position:relative}
+.newsletter p{opacity:.9;margin-bottom:28px;position:relative}
+.newsletter-form{display:flex;max-width:480px;margin:0 auto;gap:12px;position:relative}
+.newsletter-form input{flex:1;padding:14px 20px;border-radius:50px;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:.95rem;outline:none;backdrop-filter:blur(10px)}
+.newsletter-form input::placeholder{color:rgba(255,255,255,.7)}
+.newsletter-form button{padding:14px 28px;border-radius:50px;background:#fff;color:var(--accent2);font-weight:700;font-size:.95rem;transition:all .3s}
+.newsletter-form button:hover{transform:scale(1.05)}
+
+/* FOOTER */
+.footer{padding:60px;padding-bottom:30px;background:var(--bg2);border-top:1px solid rgba(255,255,255,.05)}
+.footer-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px}
+.footer-brand p{color:var(--text2);font-size:.85rem;line-height:1.7;margin-top:12px}
+.footer-col h4{font-size:.9rem;font-weight:600;margin-bottom:16px;color:var(--text)}
+.footer-col a{display:block;color:var(--text2);font-size:.85rem;margin-bottom:10px;transition:color .3s}
+.footer-col a:hover{color:var(--accent)}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid rgba(255,255,255,.05)}
+.footer-bottom p{font-size:.8rem;color:var(--text2)}
+.footer-social{display:flex;gap:12px}
+.footer-social a{width:36px;height:36px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;transition:all .3s}
+.footer-social a:hover{background:var(--accent);transform:translateY(-3px)}
+
+/* SEARCH OVERLAY */
+.search-overlay{position:fixed;inset:0;background:rgba(10,10,15,.95);backdrop-filter:blur(20px);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding-top:120px;opacity:0;visibility:hidden;transition:all .4s}
+.search-overlay.active{opacity:1;visibility:visible}
+.search-modal{width:600px;max-width:90vw}
+.search-modal input{width:100%;padding:20px 24px;font-size:1.3rem;background:var(--bg3);border:2px solid rgba(255,255,255,.1);border-radius:16px;color:var(--text);outline:none;font-family:'Inter'}
+.search-modal input:focus{border-color:var(--accent)}
+.search-results{margin-top:16px;max-height:400px;overflow-y:auto}
+.search-result-item{display:flex;align-items:center;gap:16px;padding:14px;border-radius:12px;cursor:pointer;transition:background .3s}
+.search-result-item:hover{background:var(--bg3)}
+.search-result-item img{width:50px;height:50px;border-radius:8px;object-fit:cover}
+.search-close{position:absolute;top:30px;right:30px;width:44px;height:44px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;border:none;color:#fff}
+.search-close:hover{background:var(--accent)}
+
+/* CART SIDEBAR */
+.cart-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;opacity:0;visibility:hidden;transition:all .3s}
+.cart-overlay.active{opacity:1;visibility:visible}
+.cart-sidebar{position:fixed;top:0;right:-400px;width:380px;height:100vh;background:var(--bg2);z-index:201;transition:right .4s;padding:24px;display:flex;flex-direction:column;border-left:1px solid rgba(255,255,255,.05)}
+.cart-sidebar.active{right:0}
+.cart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.cart-header h3{font-size:1.2rem}
+.cart-items{flex:1;overflow-y:auto}
+.cart-item{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.cart-item img{width:60px;height:60px;border-radius:10px;object-fit:cover;background:var(--bg3)}
+.cart-item-info h4{font-size:.9rem;margin-bottom:4px}
+.cart-item-info p{font-size:.85rem;color:var(--accent);font-weight:600}
+.cart-total{padding:20px 0;border-top:1px solid rgba(255,255,255,.05)}
+.cart-total .checkout-btn{width:100%;padding:14px;background:var(--gradient);border-radius:12px;font-weight:700;color:#fff;font-size:1rem;margin-top:12px;transition:all .3s}
+.cart-total .checkout-btn:hover{box-shadow:var(--glow);transform:translateY(-2px)}
+
+/* BACK TO TOP */
+.back-top{position:fixed;bottom:30px;right:30px;width:48px;height:48px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:99;opacity:0;visibility:hidden;transition:all .4s;border:none;color:#fff}
+.back-top.visible{opacity:1;visibility:visible}
+.back-top:hover{transform:translateY(-4px);box-shadow:var(--glow)}
+
+/* RESPONSIVE */
+@media(max-width:1024px){
+  .hero{flex-direction:column;text-align:center;padding:140px 30px 60px}
+  .hero-content{max-width:100%}
+  .hero-btns{justify-content:center}
+  .hero-image{position:relative;right:auto;top:auto;transform:none;width:80%;margin-top:40px}
+  .products-grid{grid-template-columns:repeat(3,1fr)}
+  .features{grid-template-columns:repeat(2,1fr)}
+  .footer-grid{grid-template-columns:repeat(2,1fr)}
+  section{padding:60px 30px}
+  .deals-banner,.newsletter{margin:0 30px}
+}
+@media(max-width:768px){
+  .nav-links{display:none}
+  .hero h1{font-size:2.4rem}
+  .products-grid{grid-template-columns:repeat(2,1fr)}
+  .testimonials-grid{grid-template-columns:1fr}
+  .features{grid-template-columns:1fr}
+  .deals-banner{flex-direction:column;padding:40px;margin:0 20px}
+  .deals-image{width:100%;margin-top:24px}
+  .footer-grid{grid-template-columns:1fr}
+  .newsletter{margin:0 20px;padding:40px 20px}
+  .nav{padding:12px 20px}
+  .nav-search{width:160px}
+}
+@media(max-width:480px){
+  .products-grid{grid-template-columns:1fr}
+  .hero{padding:120px 20px 40px}
+  .hero h1{font-size:2rem}
+  section{padding:50px 20px}
+}
+
+</style>
 </head>
-
 <body>
 
-  <!-- Custom Cursor -->
-  <div id="custom-cursor" class="custom-cursor">
-    <svg width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="cursorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#ff0000" />
-          <stop offset="20%" stop-color="#ffff00" />
-          <stop offset="40%" stop-color="#00ff00" />
-          <stop offset="60%" stop-color="#00ffff" />
-          <stop offset="80%" stop-color="#0000ff" />
-          <stop offset="100%" stop-color="#ff00ff" />
-        </linearGradient>
-        <linearGradient id="cursorInner" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#2a2a2a" />
-          <stop offset="100%" stop-color="#050508" />
-        </linearGradient>
-        <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
-          <feMerge>
-            <feMergeNode in="coloredBlur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-      <path d="M4 4 L16 38 L22 22 L38 16 Z" fill="url(#cursorInner)" stroke="url(#cursorGrad)" stroke-width="2.5"
-        stroke-linejoin="round" filter="url(#neonGlow)" />
-      <path d="M4 4 L22 22" stroke="url(#cursorGrad)" stroke-width="2" stroke-linecap="round" filter="url(#neonGlow)" />
-    </svg>
+<!-- LOADER -->
+<div class="loader" id="loader"><div class="loader-ring"></div></div>
+
+<!-- NAV -->
+<nav class="nav" id="navbar">
+  <a href="#" class="nav-logo">ReGadget<span>| Pre-Owned</span></a>
+  <div class="nav-links">
+    <a href="#hero">Home</a>
+    <a href="#categories">Categories</a>
+    <a href="#products">Products</a>
+    <a href="#deals">Deals</a>
+    <a href="#reviews">Reviews</a>
   </div>
-
-  <!-- NAV -->
-  <nav class="nav">
-    <!-- CHANGE IMAGE: Nav Logo - replace src to change logo -->
-    <div class="nav-logo"><img src="" alt="Logo"
-        style="height:32px; display:none; margin-right:8px; vertical-align:middle;">Edits by <span>Shiv</span></div>
-    <div class="nav-links">
-      <a href="#work">Work</a>
-      <a href="#services">Services</a>
-      <a href="#about">About</a>
-      <a href="#contact">Contact</a>
+  <div class="nav-right">
+    <div class="nav-search" id="navSearchBar">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" placeholder="Search gadgets..." id="navSearchInput">
     </div>
-    <a href="#contact" class="nav-cta">Let's Talk</a>
-  </nav>
+    <button class="nav-icon" id="searchBtn" title="Search">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    </button>
+    <button class="nav-icon" id="wishlistBtn" title="Wishlist">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+    </button>
+    <button class="nav-icon" id="cartBtn" title="Cart">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      <span class="cart-count" id="cartCount">0</span>
+    </button>
+  </div>
+</nav>
 
-  <!-- HERO -->
-  <section class="hero" id="hero">
-    <!-- CHANGE VIDEO: Hero Background - replace src to change background video -->
-    <div class="hero-bg">
-      <video id="hero-bg-video" muted playsinline autoplay src="https://photos.google.com/album/AF1QipPkEj0AlHS2Ji70bciLq3quKWO3iYKVn5_Q3gBt/photo/AF1QipM4mbrNeDRF6lOe7lxaCRX8kBuCkW49vOLwrlFM"
-        style="width:100%;height:100%;object-fit:cover;opacity:0.35;filter:blur(2px);">
-      </video>
-    </div>
-    <script>
-      (function () {
-        var v = document.getElementById('hero-bg-video');
-        v.addEventListener('ended', function () { setTimeout(function () { v.currentTime = 0; v.play(); }, 500); });
-      })();
-    </script>
-    <div class="hero-overlay"></div>
-    <canvas id="three-canvas"></canvas>
+<!-- SEARCH OVERLAY -->
+<div class="search-overlay" id="searchOverlay">
+  <button class="search-close" id="searchClose">&#10005;</button>
+  <div class="search-modal">
+    <input type="text" placeholder="Search for smartphones, laptops, headphones..." id="searchInput" autocomplete="off">
+    <div class="search-results" id="searchResults"></div>
+  </div>
+</div>
 
-    <!-- Stats Bar -->
-    <div class="stats-bar">
-      <div class="stat-item reveal">
-        <div class="stat-label">Experience</div>
-        <div class="stat-value">5+ Years</div>
-      </div>
-      <div class="stat-item reveal">
-        <div class="stat-label">Clients</div>
-        <div class="stat-value">100+ Clients</div>
-      </div>
-      <div class="stat-item reveal">
-        <div class="stat-label">Specialty</div>
-        <div class="stat-value">Cinematic Edits</div>
-      </div>
-      <div class="stat-item reveal">
-        <div class="stat-label">Available</div>
-        <div class="stat-value">Worldwide</div>
-      </div>
+<!-- CART SIDEBAR -->
+<div class="cart-overlay" id="cartOverlay"></div>
+<div class="cart-sidebar" id="cartSidebar">
+  <div class="cart-header">
+    <h3>&#128722; Your Cart</h3>
+    <button class="search-close" id="cartClose" style="position:static;width:36px;height:36px">&#10005;</button>
+  </div>
+  <div class="cart-items" id="cartItems">
+    <p style="color:var(--text2);text-align:center;margin-top:40px">Your cart is empty</p>
+  </div>
+  <div class="cart-total">
+    <div style="display:flex;justify-content:space-between;font-size:1.1rem;font-weight:700">
+      <span>Total:</span><span id="cartTotalPrice">&#8377;0</span>
     </div>
+    <button class="checkout-btn" id="checkoutBtn">Proceed to Checkout</button>
+  </div>
+</div>
 
-    <!-- Floating Laptop - REMOVED -->
-
-    <!-- Hero Content -->
-    <div class="hero-content">
-      <div class="hero-left">
-        <div class="software-icons reveal">
-          <!-- CHANGE IMAGE: Software Icon 1 (Premiere Pro) - replace src -->
-          <img src="dv.png" width="44" height="44"
-            style="border-radius:10px; background:linear-gradient(135deg, #00005b, #9999ff); padding:4px;" alt="Pr">
-          <!-- CHANGE IMAGE: Software Icon 2 (After Effects) - replace src -->
-          <img src="pr.jpg" width="44" height="44"
-            style="border-radius:10px; background:linear-gradient(135deg, #00005b, #9999ff); padding:4px;" alt="Ae">
-          <!-- CHANGE IMAGE: Software Icon 3 (DaVinci Resolve) - replace src -->
-          <img src="af.jpg" width="48" height="48"
-            style="border-radius:10px; background:linear-gradient(135deg, #1a1a2e, #2d3a4a); padding:4px;" alt="Dv">
-        </div>
-        <div class="hero-tag reveal">Professional Video Editor</div>
-        <h1 class="hero-title reveal">Shiv.Editz</h1>
-        <p class="hero-sub reveal">Crafting premium edits that move people. Professional video editing, motion design,
-          and cinematic storytelling.</p>
-        <a href="#work" class="hero-cta reveal">View My Work</a>
-      </div>
-      <div class="hero-right">
-        <div class="hero-avatar reveal">
-          <!-- CHANGE IMAGE: Profile Avatar - replace src to change profile image -->
-          <img src="1777996504920.png" alt="Shiva">
-        </div>
-      </div>
-    </div>
-
-    <!-- Schedule Strip -->
-    <div class="schedule-strip">
-      <div class="schedule-title reveal">Services</div>
-      <div class="schedule-grid">
-        <div class="sched-item reveal">
-          <!-- CHANGE IMAGE: Schedule Icon 1 - replace src to add/change icon -->
-          <img src="" alt="" style="width:28px;height:28px;margin-bottom:6px;display:none;">
-          <div class="sched-time">Short-Form</div>
-          <div class="sched-desc">Reels, TikTok & Shorts</div>
-        </div>
-        <div class="sched-item reveal">
-          <!-- CHANGE IMAGE: Schedule Icon 2 - replace src to add/change icon -->
-          <img src="" alt="" style="width:28px;height:28px;margin-bottom:6px;display:none;">
-          <div class="sched-time">YouTube</div>
-          <div class="sched-desc">Long-form Storytelling</div>
-        </div>
-        <div class="sched-item reveal">
-          <!-- CHANGE IMAGE: Schedule Icon 3 - replace src to add/change icon -->
-          <img src="" alt="" style="width:28px;height:28px;margin-bottom:6px;display:none;">
-          <div class="sched-time">Motion GFX</div>
-          <div class="sched-desc">Titles & Animations</div>
-        </div>
-        <div class="sched-item reveal">
-          <!-- CHANGE IMAGE: Schedule Icon 4 - replace src to add/change icon -->
-          <img src="" alt="" style="width:28px;height:28px;margin-bottom:6px;display:none;">
-          <div class="sched-time">Commercial</div>
-          <div class="sched-desc">Brand Films & Ads</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- PORTFOLIO -->
-  <section class="section" id="work">
-    <div class="section-head">
-      <h2 class="reveal">Selected Work</h2>
-      <p class="reveal">A curated showcase of cinematic craft and motion design.</p>
-    </div>
-    <div class="port-grid">
-      <div class="port-card reveal">
-        <div class="port-thumb">
-          <!-- CHANGE IMAGE: Portfolio Card 1 Thumbnail - replace src -->
-          <img
-            src="https://fiverr-res.cloudinary.com/images/q_auto,f_auto/gigs/149232879/original/ad93dc7ee6e6ef6e9b24c50fae2dbeb600be50e1/do-professional-video-editing-fast-and-high-quality.jpg"
-            alt="Portfolio 1">
-          <span class="port-tag">Commercial</span>
-        </div>
-        <div class="port-info">
-          <h3>Neon Nights Campaign</h3>
-          <p>High-energy product launch film with stylized motion graphics and color grading.</p>
-        </div>
-      </div>
-      <div class="port-card reveal">
-        <div class="port-thumb">
-          <!-- CHANGE IMAGE: Portfolio Card 2 Thumbnail - replace src -->
-          <img src="ChatGPT Image May 6, 2026, 03_26_46 PM.png" alt="Portfolio 2">
-          <span class="port-tag">YouTube</span>
-        </div>
-        <div class="port-info">
-          <h3>Creator Spotlight Series</h3>
-          <p>Retention-optimized storytelling for top-tier YouTube creators.</p>
-        </div>
-      </div>
-      <div class="port-card reveal">
-        <div class="port-thumb">
-          <!-- CHANGE IMAGE: Portfolio Card 3 Thumbnail - replace src -->
-          <img src="https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=800&q=80" alt="Portfolio 3">
-          <span class="port-tag">Brand Film</span>
-        </div>
-        <div class="port-info">
-          <h3>Luxury Automotive</h3>
-          <p>Sleek, rhythmic editing for premium automotive brand campaigns.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- SERVICES -->
-  <section class="section" id="services" style="background:rgba(255,255,255,0.01)">
-    <div class="section-head">
-      <h2 class="reveal">What I Do</h2>
-      <p class="reveal">Elevating visual stories with precision and creative vision.</p>
-    </div>
-    <div class="services-grid">
-      <div class="srv-card reveal">
-        <div class="srv-icon">
-          <!-- CHANGE IMAGE: Service Icon 1 (Short-Form Edits) - replace src -->
-          <img src="https://static.vecteezy.com/system/resources/thumbnails/023/608/676/small/movie-film-frame-png.png"
-            alt="Short-Form Edits" style="width: 72px; height: 72px; object-fit: contain;">
-        </div>
-        <h4>Short-Form Edits</h4>
-        <p>High-impact vertical content designed for maximum retention on TikTok, Reels, and Shorts.</p>
-      </div>
-      <div class="srv-card reveal">
-        <div class="srv-icon">
-          <!-- CHANGE IMAGE: Service Icon 2 (YouTube Editing) - replace src -->
-          <img
-            src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Youtube_shorts_icon.svg/250px-Youtube_shorts_icon.svg.png"
-            alt="YouTube Editing" style="width: 60px; height: 60px; object-fit: contain;">
-        </div>
-        <h4>YouTube Editing</h4>
-        <p>Engaging long-form edits with dynamic pacing, sound design, and narrative flow.</p>
-      </div>
-      <div class="srv-card reveal">
-        <div class="srv-icon">
-          <!-- CHANGE IMAGE: Service Icon 3 (Motion Graphics) - replace src -->
-          <img
-            src="https://static.vecteezy.com/system/resources/thumbnails/073/495/223/small/after-effects-logo-glossy-circle-icon-with-transparent-background-free-png.png"
-            alt="Motion Graphics" style="width: 60px; height: 60px; object-fit: contain;">
-        </div>
-        <h4>Motion Graphics</h4>
-        <p>Custom titles, lower thirds, transitions, and animated visual elements.</p>
-      </div>
-      <div class="srv-card reveal">
-        <div class="srv-icon">
-          <!-- CHANGE IMAGE: Service Icon 4 (Commercial Edits) - replace src -->
-          <img src="https://png.pngtree.com/element_pic/16/11/18/4f829e85866bd52d062ca58b4e1ecef5.png"
-            alt="Commercial Edits" style="width: 62px; height: 62px; object-fit: contain;">
-        </div>
-        <h4>Commercial Edits</h4>
-        <p>Cinematic color grading, premium cuts, and visual storytelling for brands.</p>
-      </div>
-      <div class="srv-card reveal">
-        <div class="srv-icon">
-          <!-- CHANGE IMAGE: Service Icon 5 (Brand Storytelling) - replace src -->
-          <img src="https://upload.wikimedia.org/wikipedia/commons/4/4d/DaVinci_Resolve_Studio.png"
-            alt="Brand Storytelling" style="width: 62px; height: 62px; object-fit: contain;">
-        </div>
-        <h4>Brand Storytelling</h4>
-        <p>Narrative-driven content that communicates brand identity and connects with audiences.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- STATS -->
-  <div class="stats-section">
-    <div class="stats-grid">
-      <div class="reveal">
-        <div class="stat-big counter" data-target="100">0</div>
-        <div class="stat-desc">Happy Clients</div>
-      </div>
-      <div class="reveal">
-        <div class="stat-big counter" data-target="5">0</div>
-        <div class="stat-desc">Years Experience</div>
-      </div>
-      <div class="reveal">
-        <div class="stat-big counter" data-target="300">0</div>
-        <div class="stat-desc">Projects Done</div>
-      </div>
-      <div class="reveal">
-        <div class="stat-big counter" data-target="50">0</div>
-        <div class="stat-desc">Brands Served</div>
-      </div>
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-badge"><span class="dot"></span> Trusted Second-Hand Store</div>
+    <h1>Next-Gen <span class="gradient">Pre-Owned</span> Tech Gadgets</h1>
+    <p>Get premium, verified second-hand gadgets at up to 70% off retail prices. Every device inspected, tested &amp; certified with warranty.</p>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">Shop Now</button>
+      <button class="btn-outline" onclick="document.getElementById('categories').scrollIntoView({behavior:'smooth'})">Browse Categories</button>
     </div>
   </div>
+  <div class="hero-image">
+    <img src="https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?w=600&q=80" alt="VR Headset">
+  </div>
+</section>
 
-  <!-- ABOUT -->
-  <section class="section" id="about">
-    <div class="glass-container">
-      <div class="about-grid">
-        <!-- CHANGE IMAGE: About Section Photo - replace src to change about photo -->
-        <div class="about-photo reveal"><img src="Screenshot 2026-05-06 153450.png" alt="Shiva"></div>
-        <div class="about-text">
-          <h3 class="reveal">About Shiva</h3>
-          <p class="reveal">A professional video editor and creative designer trusted by 100+ clients worldwide. Shiva
-            specializes in cinematic storytelling, premium motion design, and refined visual craft that elevates brands
-            and creators.</p>
-          <p class="reveal">With 5+ years of experience across YouTube editing, commercial production, and short-form
-            content, Shiva brings a meticulous eye for detail and a deep understanding of visual rhythm to every
-            project.
-          </p>
-          <p class="reveal">Tools of the trade: Adobe Premiere Pro, After Effects, DaVinci Resolve, and the relentless
-            pursuit of creative excellence.</p>
-        </div>
+<!-- FEATURES -->
+<div class="features" id="features">
+  <div class="feature-card" data-anim>
+    <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+    <div><h4>Free Shipping</h4><p>On orders above &#8377;999</p></div>
+  </div>
+  <div class="feature-card" data-anim>
+    <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg></div>
+    <div><h4>Verified Quality</h4><p>Every device tested &amp; certified</p></div>
+  </div>
+  <div class="feature-card" data-anim>
+    <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg></div>
+    <div><h4>Easy Returns</h4><p>7-day no questions asked</p></div>
+  </div>
+  <div class="feature-card" data-anim>
+    <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+    <div><h4>6-Month Warranty</h4><p>On all certified gadgets</p></div>
+  </div>
+</div>
+
+<!-- CATEGORIES -->
+<section id="categories">
+  <div class="section-head">
+    <span class="tag">&#127991;&#65039; Browse</span>
+    <h2>Choose your Category</h2>
+    <p>Find second-hand tech across all major categories</p>
+  </div>
+  <div class="categories-grid" id="categoriesGrid"></div>
+</section>
+
+<!-- PRODUCTS -->
+<section id="products" style="background:var(--bg2)">
+  <div class="section-head">
+    <span class="tag">&#11088; Top Picks</span>
+    <h2>Highly Recommended</h2>
+    <p>Our best verified pre-owned gadgets, hand-picked for quality</p>
+  </div>
+  <div class="products-grid" id="productsGrid"></div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-section">
+  <div class="marquee-track" id="marqueeTrack"></div>
+</div>
+
+<!-- DEALS BANNER -->
+<section>
+  <div class="deals-banner" id="deals">
+    <div class="deals-content" data-anim>
+      <span class="tag" style="margin-bottom:16px;display:inline-block">&#128293; Flash Sale</span>
+      <h2>Mega Deals on Pre-Owned Flagship Phones</h2>
+      <p>Get certified second-hand flagship smartphones at unbelievable prices. Limited stock available!</p>
+      <div class="deals-timer">
+        <div class="timer-box"><div class="num" id="timerDays">02</div><div class="label">Days</div></div>
+        <div class="timer-box"><div class="num" id="timerHours">18</div><div class="label">Hours</div></div>
+        <div class="timer-box"><div class="num" id="timerMins">45</div><div class="label">Minutes</div></div>
+        <div class="timer-box"><div class="num" id="timerSecs">30</div><div class="label">Seconds</div></div>
+      </div>
+      <button class="btn-primary" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">Grab the Deal &#8594;</button>
+    </div>
+    <div class="deals-image" data-anim>
+      <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&q=80" alt="Smartphone Deal">
+    </div>
+  </div>
+</section>
+
+<!-- BEST SELLING -->
+<section id="bestselling">
+  <div class="section-head">
+    <span class="tag">&#127942; Best Sellers</span>
+    <h2>Best Selling Products</h2>
+    <p>Most popular pre-owned gadgets loved by our customers</p>
+  </div>
+  <div class="products-grid" id="bestsellingGrid"></div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section id="reviews" style="background:var(--bg2)">
+  <div class="section-head">
+    <span class="tag">&#128172; Reviews</span>
+    <h2>Our Client's Happiness</h2>
+    <p>See what buyers say about their pre-owned purchases</p>
+  </div>
+  <div class="testimonials-grid" id="testimonialsGrid"></div>
+</section>
+
+<!-- NEWSLETTER -->
+<section>
+  <div class="newsletter">
+    <h2>Subscribe &amp; Get 10% Off</h2>
+    <p>Get notified about new arrivals and exclusive deals on pre-owned gadgets</p>
+    <form class="newsletter-form" id="newsletterForm" onsubmit="event.preventDefault();alert('Subscribed! Check your email for 10% off coupon.');">
+      <input type="email" placeholder="Enter your email..." required>
+      <button type="submit">Subscribe</button>
+    </form>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="#" class="nav-logo" style="font-size:1.8rem">ReGadget<span>| Pre-Owned</span></a>
+      <p>India's most trusted marketplace for certified second-hand tech gadgets. Every device verified, tested and comes with warranty.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Quick Links</h4>
+      <a href="#hero">Home</a><a href="#categories">Categories</a><a href="#products">Products</a><a href="#deals">Deals</a><a href="#reviews">Reviews</a>
+    </div>
+    <div class="footer-col">
+      <h4>Categories</h4>
+      <a href="#">Smartphones</a><a href="#">Laptops</a><a href="#">Gaming</a><a href="#">Audio</a><a href="#">Wearables</a>
+    </div>
+    <div class="footer-col">
+      <h4>Support</h4>
+      <a href="#">Contact Us</a><a href="#">FAQs</a><a href="#">Return Policy</a><a href="#">Warranty Info</a><a href="#">Sell Your Gadget</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>&#169; 2026 ReGadget. All rights reserved. | Buy &amp; Sell Pre-Owned Tech</p>
+    <div class="footer-social">
+      <a href="#" title="Facebook">f</a><a href="#" title="Twitter">X</a><a href="#" title="Instagram">ig</a><a href="#" title="YouTube">&#9654;</a>
+    </div>
+  </div>
+</footer>
+
+<!-- BACK TO TOP -->
+<button class="back-top" id="backTop" title="Back to top">&#8593;</button>
+<script>
+// ========== PRODUCT DATA ==========
+const products = [
+  {id:1,name:"iPhone 14 Pro Max",category:"smartphones",condition:"Excellent",price:54999,original:139900,img:"https://images.unsplash.com/photo-1678685888221-cda773a3dcdb?w=400&q=80",rating:4.8,reviews:234,badge:"verified",seller:"TechVerified"},
+  {id:2,name:"MacBook Air M2",category:"laptops",condition:"Excellent",price:72999,original:119900,img:"https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400&q=80",rating:4.9,reviews:189,badge:"deal",seller:"GadgetPro"},
+  {id:3,name:"Sony WH-1000XM5",category:"audio",condition:"Good",price:14999,original:29990,img:"https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=400&q=80",rating:4.7,reviews:312,badge:"used",seller:"AudioHub"},
+  {id:4,name:"PS5 DualSense Controller",category:"gaming",condition:"Excellent",price:3499,original:5990,img:"https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=400&q=80",rating:4.6,reviews:156,badge:"verified",seller:"GameZone"},
+  {id:5,name:"Samsung Galaxy S24 Ultra",category:"smartphones",condition:"Good",price:62999,original:134999,img:"https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=400&q=80",rating:4.8,reviews:278,badge:"deal",seller:"MobileKing"},
+  {id:6,name:"iPad Pro M2 12.9\"",category:"tablets",condition:"Excellent",price:64999,original:112900,img:"https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400&q=80",rating:4.9,reviews:145,badge:"verified",seller:"TabWorld"},
+  {id:7,name:"AirPods Pro 2nd Gen",category:"audio",condition:"Good",price:12999,original:24900,img:"https://images.unsplash.com/photo-1606220588913-b3aacb4d2f46?w=400&q=80",rating:4.5,reviews:423,badge:"used",seller:"AudioHub"},
+  {id:8,name:"Nintendo Switch OLED",category:"gaming",condition:"Excellent",price:18999,original:34999,img:"https://images.unsplash.com/photo-1578303512597-81e6cc155b3e?w=400&q=80",rating:4.7,reviews:198,badge:"deal",seller:"GameZone"}
+];
+
+const bestSellers = [
+  {id:9,name:"Dell XPS 15 Laptop",category:"laptops",condition:"Excellent",price:58999,original:99990,img:"https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?w=400&q=80",rating:4.8,reviews:167,badge:"verified",seller:"LaptopBazaar"},
+  {id:10,name:"Apple Watch Ultra 2",category:"wearables",condition:"Good",price:42999,original:89900,img:"https://images.unsplash.com/photo-1551816230-ef5deaed4a26?w=400&q=80",rating:4.7,reviews:213,badge:"deal",seller:"WearTech"},
+  {id:11,name:"Canon EOS R6 Camera",category:"cameras",condition:"Excellent",price:89999,original:175000,img:"https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=400&q=80",rating:4.9,reviews:89,badge:"verified",seller:"CamCorner"},
+  {id:12,name:"JBL Charge 5 Speaker",category:"audio",condition:"Good",price:7999,original:15999,img:"https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&q=80",rating:4.6,reviews:345,badge:"used",seller:"SoundShop"}
+];
+
+const categories = [
+  {name:"Smartphones",icon:"📱",img:"https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=100&q=80"},
+  {name:"Laptops",icon:"💻",img:"https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=100&q=80"},
+  {name:"Gaming",icon:"🎮",img:"https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=100&q=80"},
+  {name:"Audio",icon:"🎧",img:"https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=100&q=80"},
+  {name:"Tablets",icon:"📟",img:"https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=100&q=80"},
+  {name:"Wearables",icon:"⌚",img:"https://images.unsplash.com/photo-1551816230-ef5deaed4a26?w=100&q=80"},
+  {name:"Cameras",icon:"📷",img:"https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=100&q=80"},
+  {name:"Accessories",icon:"🔌",img:"https://images.unsplash.com/photo-1583394838336-acd977736f90?w=100&q=80"}
+];
+
+const testimonials = [
+  {name:"Rahul Sharma",text:"Bought a pre-owned iPhone 14 Pro and it's in mint condition! Saved ₹60,000. The verification process gives real confidence.",stars:5,avatar:"R"},
+  {name:"Priya Patel",text:"Amazing experience! The MacBook Air I got looks brand new. Packaging was great and delivery was super fast. Highly recommend!",stars:5,avatar:"P"},
+  {name:"Amit Kumar",text:"Was skeptical about second-hand gadgets but ReGadget changed my mind. The 6-month warranty sealed the deal for me.",stars:4,avatar:"A"}
+];
+
+// ========== CART STATE ==========
+let cart = [];
+
+// ========== LOADER ==========
+window.addEventListener('load', () => {
+  setTimeout(() => document.getElementById('loader').classList.add('hidden'), 800);
+});
+
+// ========== NAV SCROLL ==========
+window.addEventListener('scroll', () => {
+  const nav = document.getElementById('navbar');
+  const backTop = document.getElementById('backTop');
+  if (window.scrollY > 80) { nav.classList.add('scrolled'); } else { nav.classList.remove('scrolled'); }
+  if (window.scrollY > 500) { backTop.classList.add('visible'); } else { backTop.classList.remove('visible'); }
+});
+
+document.getElementById('backTop').addEventListener('click', () => window.scrollTo({top:0,behavior:'smooth'}));
+
+// ========== RENDER CATEGORIES ==========
+const catGrid = document.getElementById('categoriesGrid');
+categories.forEach((cat, i) => {
+  const el = document.createElement('div');
+  el.className = 'cat-item';
+  el.setAttribute('data-anim','');
+  el.style.transitionDelay = `${i * 0.08}s`;
+  el.innerHTML = `<div class="cat-icon"><img src="${cat.img}" alt="${cat.name}" onerror="this.style.display='none';this.parentElement.innerHTML='<span style=font-size:2rem>${cat.icon}</span>'"></div><span>${cat.name}</span>`;
+  el.addEventListener('click', () => filterByCategory(cat.name.toLowerCase()));
+  catGrid.appendChild(el);
+});
+
+// ========== RENDER PRODUCTS ==========
+function createProductCard(p) {
+  const save = Math.round((1 - p.price/p.original)*100);
+  const condClass = p.condition === 'Excellent' ? 'excellent' : p.condition === 'Good' ? 'good' : 'fair';
+  const badgeClass = p.badge === 'verified' ? 'badge-verified' : p.badge === 'deal' ? 'badge-deal' : 'badge-used';
+  const badgeText = p.badge === 'verified' ? '✓ Verified' : p.badge === 'deal' ? '🔥 Hot Deal' : '♻ Pre-Owned';
+  return `<div class="product-card" data-anim data-category="${p.category}">
+    <span class="product-badge ${badgeClass}">${badgeText}</span>
+    <div class="product-img">
+      <img src="${p.img}" alt="${p.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/400x300/1a1a24/00d4ff?text=${encodeURIComponent(p.name)}'">
+      <div class="product-actions">
+        <button onclick="addToCart(${p.id})" title="Add to Cart"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg></button>
+        <button onclick="quickView(${p.id})" title="Quick View"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        <button title="Wishlist"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></button>
       </div>
     </div>
-  </section>
-
-  <!-- CONTACT -->
-  <section class="contact-section" id="contact">
-    <!-- CHANGE IMAGE: Contact Section Background - replace src -->
-    <div class="contact-bg"><img src="bg.png" alt="Contact Background"></div>
-    <div class="contact-glass">
-      <div class="contact-wrap">
-        <h2 class="reveal">Let's Create Together</h2>
-        <p class="reveal">Available for select projects and collaborations. Let's craft your next masterpiece.</p>
-        <form class="contact-form reveal" onsubmit="event.preventDefault()">
-          <input type="text" placeholder="Your Name">
-          <input type="email" placeholder="Your Email">
-          <textarea placeholder="Tell me about your project..."></textarea>
-          <button type="submit" class="contact-btn">Send Message</button>
-        </form>
-        <div class="social-links reveal">
-          <a href="#">Instagram</a>
-          <a href="#">Email</a>
-          <a href="#">WhatsApp</a>
-        </div>
+    <div class="product-info">
+      <div class="product-condition"><span class="condition-dot ${condClass}"></span><span>${p.condition} Condition</span></div>
+      <h3>${p.name}</h3>
+      <div class="product-price">
+        <span class="price-now">₹${p.price.toLocaleString()}</span>
+        <span class="price-original">₹${p.original.toLocaleString()}</span>
+        <span class="price-save">${save}% OFF</span>
+      </div>
+      <div class="product-meta">
+        <div class="product-rating">⭐ ${p.rating} (${p.reviews})</div>
+        <span>by ${p.seller}</span>
       </div>
     </div>
-  </section>
+  </div>`;
+}
 
-  <footer class="footer">© 2026 Shiva Visions. All rights reserved.</footer>
+document.getElementById('productsGrid').innerHTML = products.map(createProductCard).join('');
+document.getElementById('bestsellingGrid').innerHTML = bestSellers.map(createProductCard).join('');
 
-  <script type="module">
-    import * as THREE from 'three';
+// ========== MARQUEE ==========
+const marqueeItems = ['🔥 Await!','⚡ Smart Shopping!','💰 Shop More, Save More!','✅ Verified Gadgets','🚚 Free Delivery','🛡️ 6-Month Warranty','♻️ Certified Pre-Owned','⭐ 50,000+ Happy Customers'];
+const track = document.getElementById('marqueeTrack');
+const mHTML = marqueeItems.map(t => `<div class="marquee-item"><span class="sep">✦</span>${t}</div>`).join('');
+track.innerHTML = mHTML + mHTML;
 
-    // GSAP
-    gsap.registerPlugin(ScrollTrigger);
-    document.querySelectorAll('.reveal').forEach(el => {
-      gsap.to(el, { scrollTrigger: { trigger: el, start: 'top 88%' }, y: 0, opacity: 1, duration: 1, ease: 'power3.out' });
-    });
+// ========== TESTIMONIALS ==========
+document.getElementById('testimonialsGrid').innerHTML = testimonials.map(t =>
+  `<div class="test-card" data-anim>
+    <div class="test-stars">${'⭐'.repeat(t.stars)}</div>
+    <p>"${t.text}"</p>
+    <div class="test-author">
+      <div class="test-avatar">${t.avatar}</div>
+      <div><h4>${t.name}</h4><span>Verified Buyer</span></div>
+    </div>
+  </div>`
+).join('');
 
-    // Counters
-    document.querySelectorAll('.counter').forEach(c => {
-      let t = parseInt(c.dataset.target);
-      gsap.to(c, { scrollTrigger: { trigger: c, start: 'top 80%' }, innerHTML: t, duration: 2, snap: { innerHTML: 1 }, ease: 'power2.out' });
-    });
+// ========== SCROLL ANIMATIONS ==========
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); }});
+}, {threshold: 0.1, rootMargin: '0px 0px -50px 0px'});
 
-    // THREE.JS - Floating particles + subtle lighting
-    const canvas = document.getElementById('three-canvas');
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(50, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
-    camera.position.z = 8;
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+function observeAll() {
+  document.querySelectorAll('[data-anim], .product-card, .feature-card, .cat-item, .test-card').forEach(el => observer.observe(el));
+}
+setTimeout(observeAll, 100);
 
-    // Lights
-    scene.add(new THREE.AmbientLight(0xffffff, 0.3));
-    const pl1 = new THREE.PointLight(0x3b82f6, 40, 20); pl1.position.set(-3, 3, 5); scene.add(pl1);
-    const pl2 = new THREE.PointLight(0x8b5cf6, 25, 20); pl2.position.set(3, -2, 4); scene.add(pl2);
+// ========== SEARCH ==========
+const searchOverlay = document.getElementById('searchOverlay');
+const searchInput = document.getElementById('searchInput');
+const searchResults = document.getElementById('searchResults');
+const navSearchInput = document.getElementById('navSearchInput');
 
-    // Particles
-    const pCount = 120; const pGeo = new THREE.BufferGeometry();
-    const pPos = new Float32Array(pCount * 3);
-    for (let i = 0; i < pCount * 3; i++)pPos[i] = (Math.random() - 0.5) * 16;
-    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-    const pMat = new THREE.PointsMaterial({ size: 0.04, color: 0x6366f1, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending });
-    const particles = new THREE.Points(pGeo, pMat); scene.add(particles);
+document.getElementById('searchBtn').addEventListener('click', () => {
+  searchOverlay.classList.add('active');
+  setTimeout(() => searchInput.focus(), 200);
+});
+document.getElementById('searchClose').addEventListener('click', () => searchOverlay.classList.remove('active'));
+searchOverlay.addEventListener('click', e => { if(e.target === searchOverlay) searchOverlay.classList.remove('active'); });
 
-    // Geometric accents
-    const gMat = new THREE.MeshPhysicalMaterial({ color: 0x111118, metalness: 0.9, roughness: 0.15, clearcoat: 1, transparent: true, opacity: 0.4 });
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(2, 0.06, 16, 80), gMat);
-    ring.position.set(1, 0, 0); scene.add(ring);
-    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(1.4, 0.04, 16, 60), gMat);
-    ring2.position.set(-1, 1, 1); ring2.rotation.x = 1; scene.add(ring2);
+function performSearch(query) {
+  if (!query.trim()) { searchResults.innerHTML = ''; return; }
+  const q = query.toLowerCase();
+  const allProducts = [...products, ...bestSellers];
+  const results = allProducts.filter(p => p.name.toLowerCase().includes(q) || p.category.includes(q));
+  if (results.length === 0) {
+    searchResults.innerHTML = '<p style="color:var(--text2);padding:20px;text-align:center">No products found</p>';
+    return;
+  }
+  searchResults.innerHTML = results.map(p =>
+    `<div class="search-result-item" onclick="quickView(${p.id})">
+      <img src="${p.img}" alt="${p.name}">
+      <div><h4 style="font-size:.9rem">${p.name}</h4><p style="color:var(--accent);font-weight:600;font-size:.85rem">₹${p.price.toLocaleString()}</p></div>
+    </div>`
+  ).join('');
+}
 
-    let mx = 0, my = 0;
-    document.addEventListener('mousemove', e => { mx = (e.clientX / window.innerWidth - 0.5) * 2; my = (e.clientY / window.innerHeight - 0.5) * 2; });
+searchInput.addEventListener('input', e => performSearch(e.target.value));
+navSearchInput.addEventListener('input', e => performSearch(e.target.value));
+navSearchInput.addEventListener('focus', () => { searchOverlay.classList.add('active'); searchInput.value = navSearchInput.value; setTimeout(() => searchInput.focus(), 200); });
 
-    const clock = new THREE.Clock();
-    function animate() {
-      requestAnimationFrame(animate);
-      const t = clock.getElapsedTime();
-      particles.rotation.y = t * 0.03;
-      particles.rotation.x = t * 0.01;
-      ring.rotation.z = t * 0.15; ring.rotation.x = t * 0.08;
-      ring2.rotation.z = -t * 0.12; ring2.rotation.y = t * 0.1;
-      camera.position.x += (mx * 0.5 - camera.position.x) * 0.02;
-      camera.position.y += (-my * 0.3 - camera.position.y) * 0.02;
-      camera.lookAt(0, 0, 0);
-      renderer.render(scene, camera);
-    }
-    animate();
+// ========== CART ==========
+const cartSidebar = document.getElementById('cartSidebar');
+const cartOverlay = document.getElementById('cartOverlay');
 
-    window.addEventListener('resize', () => {
-      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-      camera.aspect = canvas.clientWidth / canvas.clientHeight;
-      camera.updateProjectionMatrix();
-    });
+document.getElementById('cartBtn').addEventListener('click', () => { cartSidebar.classList.add('active'); cartOverlay.classList.add('active'); });
+document.getElementById('cartClose').addEventListener('click', closeCart);
+cartOverlay.addEventListener('click', closeCart);
 
-    // Smooth scroll for nav links
-    document.querySelectorAll('a[href^="#"]').forEach(a => {
-      a.addEventListener('click', e => {
-        e.preventDefault();
-        const target = document.querySelector(a.getAttribute('href'));
-        if (target) target.scrollIntoView({ behavior: 'smooth' });
-      });
-    });
+function closeCart() { cartSidebar.classList.remove('active'); cartOverlay.classList.remove('active'); }
 
-    // Custom Cursor Logic
-    const cCursor = document.getElementById('custom-cursor');
-    document.addEventListener('mousemove', e => {
-      cCursor.style.transform = `translate3d(${e.clientX - 4}px, ${e.clientY - 4}px, 0)`;
+function addToCart(id) {
+  const allProducts = [...products, ...bestSellers];
+  const p = allProducts.find(x => x.id === id);
+  if (!p) return;
+  const existing = cart.find(x => x.id === id);
+  if (existing) { existing.qty++; } else { cart.push({...p, qty: 1}); }
+  updateCart();
+  cartSidebar.classList.add('active');
+  cartOverlay.classList.add('active');
+}
 
-      const hoverable = e.target.closest('a, button, input, textarea, .port-card, .srv-card, .nav-logo');
-      if (hoverable) {
-        cCursor.classList.add('active');
-      } else {
-        cCursor.classList.remove('active');
-      }
-    });
-  </script>
+function removeFromCart(id) {
+  cart = cart.filter(x => x.id !== id);
+  updateCart();
+}
+
+function updateCart() {
+  const cartItems = document.getElementById('cartItems');
+  const cartCount = document.getElementById('cartCount');
+  const cartTotal = document.getElementById('cartTotalPrice');
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  cartCount.textContent = cart.reduce((s, i) => s + i.qty, 0);
+  if (cart.length === 0) {
+    cartItems.innerHTML = '<p style="color:var(--text2);text-align:center;margin-top:40px">Your cart is empty</p>';
+  } else {
+    cartItems.innerHTML = cart.map(i =>
+      `<div class="cart-item">
+        <img src="${i.img}" alt="${i.name}">
+        <div class="cart-item-info" style="flex:1">
+          <h4>${i.name}</h4>
+          <p>₹${i.price.toLocaleString()} × ${i.qty}</p>
+        </div>
+        <button onclick="removeFromCart(${i.id})" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:1.2rem">✕</button>
+      </div>`
+    ).join('');
+  }
+  cartTotal.textContent = `₹${total.toLocaleString()}`;
+}
+
+// ========== QUICK VIEW ==========
+function quickView(id) {
+  const allProducts = [...products, ...bestSellers];
+  const p = allProducts.find(x => x.id === id);
+  if (!p) return;
+  searchOverlay.classList.remove('active');
+  const save = Math.round((1 - p.price/p.original)*100);
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(10,10,15,.95);backdrop-filter:blur(20px);z-index:300;display:flex;align-items:center;justify-content:center;animation:fadeUp .3s ease';
+  modal.innerHTML = `<div style="background:var(--card);border-radius:24px;max-width:700px;width:90%;display:flex;overflow:hidden;border:1px solid rgba(255,255,255,.1)">
+    <div style="width:50%;background:var(--bg3)"><img src="${p.img}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover"></div>
+    <div style="padding:32px;width:50%;display:flex;flex-direction:column;justify-content:center">
+      <span style="color:var(--accent);font-size:.8rem;font-weight:600">♻ PRE-OWNED • ${p.condition.toUpperCase()}</span>
+      <h2 style="font-size:1.4rem;margin:12px 0 8px;font-family:Outfit">${p.name}</h2>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px"><span style="font-size:1.5rem;font-weight:800;color:var(--accent)">₹${p.price.toLocaleString()}</span><span style="text-decoration:line-through;color:var(--text2)">₹${p.original.toLocaleString()}</span><span style="background:rgba(16,185,129,.15);color:#10b981;padding:2px 10px;border-radius:50px;font-size:.8rem;font-weight:600">${save}% OFF</span></div>
+      <p style="color:var(--text2);font-size:.85rem;line-height:1.7;margin-bottom:20px">⭐ ${p.rating} (${p.reviews} reviews) • Sold by ${p.seller}<br>✅ Verified & Tested • 🛡️ 6-Month Warranty</p>
+      <button class="btn-primary" onclick="addToCart(${p.id});this.closest('div[style]').parentElement.remove()" style="text-align:center">Add to Cart</button>
+    </div>
+  </div>`;
+  modal.addEventListener('click', e => { if(e.target === modal) modal.remove(); });
+  document.body.appendChild(modal);
+}
+
+// ========== CATEGORY FILTER ==========
+function filterByCategory(cat) {
+  searchOverlay.classList.add('active');
+  searchInput.value = cat;
+  performSearch(cat);
+}
+
+// ========== COUNTDOWN TIMER ==========
+function updateTimer() {
+  const end = new Date();
+  end.setDate(end.getDate() + 2);
+  end.setHours(23,59,59);
+  function tick() {
+    const now = new Date();
+    const diff = end - now;
+    if (diff <= 0) return;
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    document.getElementById('timerDays').textContent = String(d).padStart(2,'0');
+    document.getElementById('timerHours').textContent = String(h).padStart(2,'0');
+    document.getElementById('timerMins').textContent = String(m).padStart(2,'0');
+    document.getElementById('timerSecs').textContent = String(s).padStart(2,'0');
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+updateTimer();
+
+// ========== CHECKOUT ==========
+document.getElementById('checkoutBtn').addEventListener('click', () => {
+  if (cart.length === 0) { alert('Your cart is empty!'); return; }
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  alert(`🎉 Order placed successfully!\n\nTotal: ₹${total.toLocaleString()}\nItems: ${cart.length}\n\nThank you for shopping at ReGadget!`);
+  cart = [];
+  updateCart();
+  closeCart();
+});
+
+// ========== KEYBOARD SHORTCUTS ==========
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { searchOverlay.classList.remove('active'); closeCart(); document.querySelectorAll('[style*="z-index:300"]').forEach(el => el.remove()); }
+  if (e.key === '/' && !e.ctrlKey && document.activeElement.tagName !== 'INPUT') { e.preventDefault(); searchOverlay.classList.add('active'); setTimeout(() => searchInput.focus(), 200); }
+});
+
+// ========== SMOOTH PARALLAX ON HERO ==========
+window.addEventListener('scroll', () => {
+  const hero = document.querySelector('.hero-image');
+  if (hero) { hero.style.transform = `translateY(calc(-50% + ${window.scrollY * 0.15}px))`; }
+});
+
+// ========== WISHLIST BUTTON ==========
+document.getElementById('wishlistBtn').addEventListener('click', () => alert('❤️ Wishlist feature coming soon!'));
+
+console.log('🚀 ReGadget loaded successfully!');
+
+</script>
 </body>
-
 </html>
